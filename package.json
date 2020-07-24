@@ -1,0 +1,26 @@
+{
+    "name": "@coveops/toggle-filter",
+    "version": "1.0.0",
+    "description": "",
+    "main": "dist/index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "coveops build ToggleFilter --template typescript",
+        "serve": "coveops serve",
+        "precompile": "npm run build"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "Apache-2.0",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "dependencies": {
+        "@coveops/turbo-core": "^1.1.1",
+        "coveo-search-ui": "^2.9373.6"
+    },
+    "devDependencies": {
+        "@coveops/cli": "^0.8.1"
+    }
+}

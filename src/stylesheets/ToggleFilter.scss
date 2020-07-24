@@ -1,0 +1,81 @@
+.coveo-filter-section {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-shrink: 0;
+    -moz-flex-shrink: 0;
+    flex-shrink: 0;
+    -ms-flex-negative: 0;
+    text-align: right;
+}
+.CoveoToggleFilter {
+
+    align-items: center;
+    display: flex;
+
+    .coveo-togglefilter-checkbox {
+      position: absolute;
+      margin-left: -9999px;
+      visibility: hidden;
+    }
+    .coveo-togglefilter-checkbox + label {
+      display: block;
+      position: relative;
+      cursor: pointer;
+      outline: none;
+      user-select: none;
+    }
+
+    input.coveo-togglefilter-checkbox + label {
+        padding: 2px;
+        width: 80px;
+        height: 40px;
+        background-color: #dddddd;
+        border-radius: 40px;
+        transition: background 0.4s;
+    }
+    input.coveo-togglefilter-checkbox + label:before,
+    input.coveo-togglefilter-checkbox + label:after {
+      display: block;
+      position: absolute;
+      content: "";
+    }
+
+    input.coveo-togglefilter-checkbox + label:before {
+      top: 2px;
+      left: 2px;
+      bottom: 2px;
+      right: 2px;
+      background-color: #fff;
+      border-radius: 40px;
+      transition: background 0.4s;
+    }
+
+    input.coveo-togglefilter-checkbox + label:after {
+      top: 4px;
+      left: 4px;
+      bottom: 4px;
+      width: 32px;
+      background-color: #dddddd;
+      border-radius: 32px;
+      transition: margin 0.4s, background 0.4s;
+    }
+
+    input.coveo-togglefilter-checkbox:checked + label {
+      background-color: #a00;
+    }
+    input.coveo-togglefilter-checkbox:checked + label:after {
+      margin-left: 40px;
+      background-color: #a00;
+    }
+
+    .coveo-togglefilter-span-label {
+        padding: 0 4px;
+        margin-right: 5px;
+        text-align: left;
+        width: 65px;
+    }
+}
