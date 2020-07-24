@@ -1,12 +1,11 @@
 import { $$, Dom, Component, Utils, IComponentBindings, ComponentOptions, IFieldOption, l, BreadcrumbEvents, QueryEvents, IAnalyticsSimpleFilterMeta, analyticsActionCauseList, IBuildingQueryEventArgs, IDoneBuildingQueryEventArgs, IQuerySuccessEventArgs, IPopulateBreadcrumbEventArgs, Checkbox  } from 'coveo-search-ui';
 import { lazyComponent } from '@coveops/turbo-core';
-import { ToggleFilterValue } from './ToggleFilterValue';
 import { SVGIcons } from './utilities/SVGIcons';
 
 export interface IToggleFilterOptions {
     title?:string;
-    field?:IFieldOption;
-    truthyValue?: string;
+    breadcrumbValue?: string;
+    expression?:string;
     
 }
 
@@ -24,13 +23,18 @@ interface ILabeledCheckboxValue {
 @lazyComponent
 export class ToggleFilter extends Component {
     static ID = 'ToggleFilter';
+    static COUNTER = 0;
     static options: IToggleFilterOptions = {
+
         /**
-         * Specifies the field whose values the `ToggleFilter` should output result filters from.
-         *
-         * Specifying a value for this option is required for the `ToggleFilter` component to work.
-         */
-        field: ComponentOptions.buildFieldOption({ required: true }),
+        * Specifies an advanced expression or filter that the `ToggleFilter` should output result filters from.
+        *
+        * **Example:**
+        *
+        * `@madeinusa==true`
+        *
+        */
+        expression: ComponentOptions.buildQueryExpressionOption({ required: true}),
 
         /**
          * Specifies the title to display for the `ToggleFilter`.
@@ -39,27 +43,24 @@ export class ToggleFilter extends Component {
          */
         title: ComponentOptions.buildLocalizedStringOption({ localizedString: () => l('NoTitle') }),
         /**
-         * Specifies the truthy value used to toggle ON `ToggleFilter` button.
+         * Specifies the breadcrumb value to display when the `ToggleFilter` is activated.
          *
-         * Default value is `true`.
+         * Default value is `True`.
          */
-        truthyValue: ComponentOptions.buildStringOption({ defaultValue: 'true' }),
+        breadcrumbValue: ComponentOptions.buildStringOption({ defaultValue: 'True' })
     };
 
     private toggleCheckbox: ILabeledCheckboxValue;
     private toggleBtn: Dom;
-    private toggleLabelElement: Dom;
-    private toggleCheckboxElement: Dom;
-    private previouslyToggled: string = '';
-    private groupByBuilder: ToggleFilterValue;
     private shouldTriggerQuery = true;
-    private groupByRequestValues: string[] = [];
+    
 
     constructor(public element: HTMLElement, public options: IToggleFilterOptions, public bindings: IComponentBindings) {
         super(element, ToggleFilter.ID, bindings);
         this.options = ComponentOptions.initComponentOptions(element, ToggleFilter, options);
         this.element.title = this.options.title;
 
+        ++ToggleFilter.COUNTER;
         this.buildContent();
 
         this.bind.onRootElement(BreadcrumbEvents.populateBreadcrumb, (args: IPopulateBreadcrumbEventArgs) =>
@@ -67,17 +68,16 @@ export class ToggleFilter extends Component {
         );
         this.bind.onRootElement(BreadcrumbEvents.clearBreadcrumb, () => this.handleClearBreadcrumb());
         this.bind.onRootElement(QueryEvents.buildingQuery, (args: IBuildingQueryEventArgs) => this.handleBuildingQuery(args));
-        this.bind.onRootElement(QueryEvents.doneBuildingQuery, (args: IDoneBuildingQueryEventArgs) => this.handleDoneBuildingQuery(args));
         this.bind.onRootElement(QueryEvents.querySuccess, (args: IQuerySuccessEventArgs) => this.handleQuerySuccess(args));
     }
 
     private buildContent(){
 
         this.toggleCheckbox = {
-            label: this.options.truthyValue,
+            label: this.options.breadcrumbValue,
             checkbox: <HTMLInputElement> $$('input', { 
                 type: 'checkbox', 
-                id: `${this.normalizeField(<string>this.options.field)}Checkbox`,
+                id: `coveo-togglefilter-checkbox-${ToggleFilter.COUNTER}`,
                 className: 'coveo-togglefilter-checkbox' }).el
         }
 
@@ -107,14 +107,6 @@ export class ToggleFilter extends Component {
         $$(this.toggleCheckbox.checkbox).on('change', () => this.handleToggle());
         
         this.refreshToggleState();
-    }
-
-    private normalizeField(name){
-        name = Utils.trim(name);
-        if (name[0] == '@') {
-            name = name.substr(1);
-        }
-        return name;
     }
 
     private handlePopulateBreadcrumb(args: IPopulateBreadcrumbEventArgs) {
@@ -169,7 +161,7 @@ export class ToggleFilter extends Component {
           this.usageAnalytics.logSearchEvent<IAnalyticsSimpleFilterMeta>(action, {
             simpleFilterTitle: this.options.title,
             simpleFilterSelectedValue: this.toggleCheckbox.label,
-            simpleFilterField: <string>this.options.field
+            simpleFilterField: <string>this.options.expression
           });
           this.queryController.executeQuery();
         }
@@ -182,21 +174,14 @@ export class ToggleFilter extends Component {
     }
 
     private handleQuerySuccess(data: IQuerySuccessEventArgs) {
-        this.groupByBuilder.groupBy(data);
-        this.groupByRequestValues = this.groupByBuilder.getValuesFromGroupBy();
         this.refreshToggleState();
     }
 
     private handleBuildingQuery(args: IBuildingQueryEventArgs) {
 
       if (this.isSelected()) {
-        args.queryBuilder.advancedExpression.addFieldExpression(this.options.field.toString(), '==', [this.toggleCheckbox.label]);
+        args.queryBuilder.advancedExpression.add(this.options.expression);
       }
-    }
-
-    private handleDoneBuildingQuery(data: IDoneBuildingQueryEventArgs) {
-      this.groupByBuilder = new ToggleFilterValue(this, this.options);
-      this.groupByBuilder.handleDoneBuildingQuery(data);
     }
 
     public getToggleCheckbox() {
